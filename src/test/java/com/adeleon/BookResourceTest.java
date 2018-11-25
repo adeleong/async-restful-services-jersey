@@ -1,6 +1,7 @@
 package com.adeleon;
 
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 import org.junit.Before;
 import org.junit.Test;
 import javax.ws.rs.client.Entity;
@@ -19,8 +20,8 @@ public class BookResourceTest extends JerseyTest{
     private String book2_id;
 
     protected Application configure() {
-        //enable(TestProperties.LOG_TRAFFIC);
-       // enable(TestProperties.DUMP_ENTITY);
+        enable(TestProperties.LOG_TRAFFIC);
+        enable(TestProperties.DUMP_ENTITY);
         final BookDao dao = new BookDao();
         return new BookApplication(dao);
     }
