@@ -18,7 +18,7 @@ public class BookResource {
     @Context BookDao dao;
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({"application/json;qs=1", "application/xml;qs=0.5"})
     @ManagedAsync
     public void getBooks(@Suspended final AsyncResponse response){
         response.resume(dao.getBooks());
@@ -36,7 +36,7 @@ public class BookResource {
 
     @Path("/{id}")
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({"application/json;qs=1", "application/xml;qs=0.5"})
     @ManagedAsync
     public void getBook(@PathParam("id") String id, @Suspended final AsyncResponse response){
         ListenableFuture<Book> bookListenableFuture = dao.getBookAsync(id);
@@ -53,8 +53,8 @@ public class BookResource {
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces({"application/json;qs=1", "application/xml;qs=0.5"})
     @ManagedAsync
     public void addBook(Book book, @Suspended final AsyncResponse response){
         ListenableFuture<Book> bookFuture = dao.addBookAsync(book);
