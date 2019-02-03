@@ -6,6 +6,7 @@ import com.jcabi.xml.XML;
 import com.jcabi.xml.XMLDocument;
 import com.sun.org.apache.regexp.internal.RE;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.junit.Before;
@@ -38,6 +39,7 @@ public class BookResourceTest extends JerseyTest{
         JacksonJsonProvider json = new JacksonJsonProvider();
         json.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
         clientConfig.register(json);
+        clientConfig.connectorProvider(new GrizzlyConnectorProvider());
     }
 
     protected Response addBook(String author, String title, Date published, String isbn, String... extras){
@@ -163,6 +165,35 @@ public class BookResourceTest extends JerseyTest{
 
         Response response = target("books").path(book1_id).request().header("If-None-Match", entityTag).get();
         assertEquals(304, response.getStatus());
+    }
+
+    @Test
+    public void UpdateBookAuthor(){
+        HashMap<String, Object> updates = new HashMap<String, Object>();
+        updates.put("author", "updatedAuthor");
+        Entity<HashMap<String, Object>> updateEntity = Entity.entity(updates, MediaType.APPLICATION_JSON);
+        Response updateResponse = target("books").path(book1_id).request().build("PATCH", updateEntity).invoke();
+
+        assertEquals(200, updateResponse.getStatus());
+
+        Response getResponse = target("books").path(book1_id).request().get();
+        HashMap<String, Object> getResponseMap = toHashMap(getResponse);
+
+        assertEquals("updatedAuthor", getResponseMap.get("author"));
+    }
+
+    @Test
+    public void PatchMethodOverride(){
+        HashMap<String, Object> updates = new HashMap<String, Object>();
+        updates.put("author","updateAuthor");
+        Entity<HashMap<String, Object>> updateEntity = Entity.entity(updates, MediaType.APPLICATION_JSON);
+        Response updateResponse = target("books").path(book1_id).queryParam("_method", "PATCH").
+                request().post(updateEntity);
+        assertEquals(200, updateResponse.getStatus());
+
+        Response getResponse = target("books").path(book1_id).request().get();
+        HashMap<String, Object> getResponseMap = toHashMap(getResponse);
+        assertEquals("updateAuthor", getResponseMap.get("author"));
     }
 }
 
