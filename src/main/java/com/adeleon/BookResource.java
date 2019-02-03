@@ -84,15 +84,25 @@ public class BookResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @ManagedAsync
-    public void updateBook(@PathParam("id") String id, Book book, @Suspended final AsyncResponse response){
-        ListenableFuture<Book> bookFuture = dao.updateBookAsync(id, book);
-        Futures.addCallback(bookFuture, new FutureCallback<Book>() {
-            @Override
-            public void onSuccess(Book updateBook) {
-                response.resume(updateBook);
+    public void updateBook(@PathParam("id") final String id, final Book book, @Suspended final AsyncResponse response){
+        ListenableFuture<Book> getBookFuture = dao.getBookAsync(id);
+        Futures.addCallback(getBookFuture, new FutureCallback<Book>() {
+            public void onSuccess(Book originalBook) {
+                Response.ResponseBuilder rb = request.evaluatePreconditions(generateEntityTag(originalBook));
+                if(rb != null){
+                    response.resume(rb.build());
+                }else{
+                    ListenableFuture<Book> bookFuture = dao.updateBookAsync(id, book);
+                    Futures.addCallback(bookFuture, new FutureCallback<Book>() {
+                        public void onSuccess(Book updateBook) {
+                            response.resume(updateBook);
+                        }
+                        public void onFailure(Throwable throwable) {
+                            response.resume(throwable);
+                        }
+                    });
+                }
             }
-
-            @Override
             public void onFailure(Throwable throwable) {
                 response.resume(throwable);
             }

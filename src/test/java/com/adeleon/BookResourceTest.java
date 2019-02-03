@@ -183,6 +183,21 @@ public class BookResourceTest extends JerseyTest{
     }
 
     @Test
+    public void UpdateBookExtra(){
+        HashMap<String, Object> updates = new HashMap<String, Object>();
+        updates.put("hello", "world");
+        Entity<HashMap<String, Object>> updateEntity = Entity.entity(updates, MediaType.APPLICATION_JSON);
+        Response updateResponse = target("books").path(book1_id).request().build("PATCH", updateEntity).invoke();
+
+        assertEquals(200, updateResponse.getStatus());
+
+        Response getResponse = target("books").path(book1_id).request().get();
+        HashMap<String, Object> getResponseMap = toHashMap(getResponse);
+
+        assertEquals("world", getResponseMap.get("hello"));
+    }
+
+    @Test
     public void PatchMethodOverride(){
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("author","updateAuthor");
@@ -194,6 +209,24 @@ public class BookResourceTest extends JerseyTest{
         Response getResponse = target("books").path(book1_id).request().get();
         HashMap<String, Object> getResponseMap = toHashMap(getResponse);
         assertEquals("updateAuthor", getResponseMap.get("author"));
+    }
+
+    @Test
+    public void UpdateIfMatch(){
+        EntityTag entityTag = target("books").path(book1_id).request().get().getEntityTag();
+
+        HashMap<String, Object> updates = new HashMap<String, Object>();
+        updates.put("author", "updatedAuthor");
+        Entity<HashMap<String, Object>> updateEntity = Entity.entity(updates, MediaType.APPLICATION_JSON);
+        Response updateResponse = target("books").path(book1_id).request().
+                header("If-Match", entityTag).build("PATCH", updateEntity).invoke();
+
+        assertEquals(200, updateResponse.getStatus());
+
+        Response updateResponse2 = target("books").path(book1_id).request().
+                header("If-Match", entityTag).build("PATCH", updateEntity).invoke();
+
+        assertEquals(412, updateResponse2.getStatus());
     }
 }
 
